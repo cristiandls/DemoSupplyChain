@@ -3,20 +3,42 @@ import DemoSupplyChain from '../contracts/DemoSupplyChain.json';
 import getWeb3 from '../utils/getWeb3';
 import truffleContract from "truffle-contract";
 import TableReadings from './readings';
-import { Button, Icon, Input, Row, Col, CardPanel } from 'react-materialize'
+import { Input, Button, Icon, Row, Col, CardPanel } from 'react-materialize'
 
 class Content extends Component {
 
-  state = {
-    web3: null,
-    accounts: null,
-    contract: null,
-    readings: [],
-    devices: [],
-    sensor: null,
-    device: 1,
-    readingCount: 5,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      web3: null,
+      accounts: null,
+      contract: null,
+      readings: [],
+      devices: [],
+      sensor: null,
+      device: '1',
+      readingCount: 5,
+    };
+ 
+    this.handleChangeSelect = this.handleChangeSelect.bind(this);
+    this.handleChangeReading = this.handleChangeReading.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChangeSelect(event) {
+    this.setState({ device: event.target.value });
+  }
+
+  handleChangeReading(event) {
+    this.setState({ readingCount: event.target.value });
+  }
+
+
+  handleSubmit(event) {
+    this.getContractInfo();
+    event.preventDefault();
+  }
 
   componentDidMount = async () => {
 
@@ -33,9 +55,25 @@ class Content extends Component {
 
       const instance = await Contract.deployed();
 
+      //Obtener dispositivos
+      const devices = await instance.getAllDevices();
+      const deviceItems = [];
+
+      //Recorrer los dispositivos encontrados
+      for (let i = 0; i < devices[0].length; i++) {
+        const id = devices[0][i].toString();
+        // const descripcion = web3.utils.toAscii(devices[1][i]);
+        const descripcion = web3.utils.toUtf8(devices[1][i]);
+        let deviceItem = {
+          id: id,
+          descripcion: descripcion,
+        }
+        deviceItems.push(deviceItem);
+      }
+
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
-      this.setState({ web3, accounts, contract: instance }, this.getContractInfo);
+      this.setState({ web3, accounts, contract: instance, devices: deviceItems });
 
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -47,22 +85,7 @@ class Content extends Component {
   };
 
   getContractInfo = async () => {
-    const { contract, web3, device, readingCount } = this.state;
-
-    //Obtener dispositivos
-    const devices = await contract.getAllDevices();
-    const deviceItems = [];
-
-    //Recorrer los dispositivos encontrados
-    for (let i = 0; i < devices[0].length; i++) {
-      const id = devices[0][i].toString();
-      const descripcion = web3.utils.toAscii(devices[1][i]);
-      let deviceItem = {
-        id: id,
-        descripcion: descripcion,
-      }
-      deviceItems.push(deviceItem);
-    }
+    const { contract, device, readingCount } = this.state;
 
     //Obtener lecturas
     const readings = await contract.getLastNReadingsByDeviceId(device, readingCount);
@@ -87,7 +110,7 @@ class Content extends Component {
       }
       readingItems.push(readingItem);
     }
-    this.setState({ readings: readingItems, devices: deviceItems });
+    this.setState({ readings: readingItems });
   };
 
   render() {
@@ -96,7 +119,7 @@ class Content extends Component {
       return <div>Loading Web3, accounts, and contract...</div>;
     }
 
-    const { readings, devices, device } = this.state;
+    const { readings, devices } = this.state;
 
     return (
       <div className="Content">
@@ -104,22 +127,21 @@ class Content extends Component {
           <Col s={12} m={12}>
             <CardPanel className="#f9fbe7 lime lighten-5">
               <Row>
-                <Input 
-                  s={4} 
-                  type='select' 
-                  label="Lista de dispositivos/sensores" 
-                  defaultValue={device}
-                  onChange={this.handleChange} value={this.state.device}>
-                  {devices.map(n => {
-                    return (
-                      <option value={n.id}>{n.descripcion}</option>
-                    );
-                  })}
-                </Input>
-                <Input s={4} label="Cantidad de lecturas a obtener de la Blockchain" defaultValue="5" />
-                <div>
-                  <Button className="#1565c0 blue darken-3" waves='light'>Obtener lecturas<Icon left>cloud</Icon></Button>
-                </div>
+                <form onSubmit={this.handleSubmit}>
+                  <Input s={4} type='select' label="Lista de dispositivos/sensores" onChange={this.handleChangeSelect} value={this.state.device}>
+                    {devices.map(n => {
+                      return (
+                        <option key={n.id} value={n.id}>{n.descripcion}</option>
+                      );
+                    })}
+                  </Input>
+                  <Input type="text" s={4} label="Cantidad de lecturas a obtener de la Blockchain" onChange={this.handleChangeReading} defaultValue="5" />
+                  <div>
+                    <Button type="submit" s={4} className="#1565c0 blue darken-3" waves='light'>Obtener lecturas<Icon left>cloud</Icon></Button>
+                  </div>
+                </form>
+              </Row>
+              <Row>
                 <TableReadings readings={readings} />
               </Row>
             </CardPanel>
