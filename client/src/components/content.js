@@ -18,9 +18,9 @@ class Content extends Component {
       devices: [],
       sensor: null,
       device: '1',
-      readingCount: 5,
+      readingCount: 8,
     };
- 
+
     this.handleChangeSelect = this.handleChangeSelect.bind(this);
     this.handleChangeReading = this.handleChangeReading.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -75,6 +75,9 @@ class Content extends Component {
       // example of interacting with the contract's methods.
       this.setState({ web3, accounts, contract: instance, devices: deviceItems });
 
+      //Setear timer cada 10 segundos
+      this.interval = setInterval(() => this.getContractInfo(), 10000);
+
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -113,6 +116,10 @@ class Content extends Component {
     this.setState({ readings: readingItems });
   };
 
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
   render() {
 
     if (!this.state.web3) {
@@ -135,9 +142,9 @@ class Content extends Component {
                       );
                     })}
                   </Input>
-                  <Input type="text" s={4} label="Cantidad de lecturas a obtener de la Blockchain" onChange={this.handleChangeReading} defaultValue="5" />
+                  <Input type="text" s={4} label="Cantidad de lecturas a obtener de la Blockchain" onChange={this.handleChangeReading} defaultValue="8" />
                   <div>
-                    <Button type="submit" s={4} className="#1565c0 blue darken-3" waves='light'>Obtener lecturas<Icon left>cloud</Icon></Button>
+                    <Button type="submit" s={4} className="#1565c0 blue darken-3" waves='light'>Obtener lecturas<Icon left>refresh</Icon></Button>
                   </div>
                 </form>
               </Row>

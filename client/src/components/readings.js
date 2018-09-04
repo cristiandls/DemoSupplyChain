@@ -29,10 +29,10 @@ function SimpleTable(props) {
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
-            <TableCell>Dirección del sensor que envió la medición</TableCell>
+            <TableCell>Dirección desde donde se envió la medición</TableCell>
             <TableCell>Fecha de envío</TableCell>
             <TableCell>Hora de envío </TableCell>
-            <TableCell numeric>Temperatura medida en (°C)</TableCell>
+            <TableCell numeric>Temperatura</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
