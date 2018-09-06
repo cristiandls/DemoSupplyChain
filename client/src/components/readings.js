@@ -29,7 +29,7 @@ function SimpleTable(props) {
       <Table className={classes.table}>
         <TableHead>
           <TableRow>
-            <TableCell>ID de la medición</TableCell>
+            <TableCell>ID de bloque</TableCell>
             <TableCell>Dirección desde donde se envió la medición</TableCell>
             <TableCell>Fecha de envío</TableCell>
             <TableCell>Hora de envío </TableCell>
@@ -40,7 +40,7 @@ function SimpleTable(props) {
           {readings.map(n => {
             return (
               <TableRow key={n.id}>
-                <TableCell numeric>{n.id}</TableCell>
+                <TableCell><a href={"https://ropsten.etherscan.io/block/" + n.blockNumber} target="_blank">{n.blockNumber}</a></TableCell>
                 <TableCell component="th" scope="row">
                   {n.sender}
                 </TableCell>

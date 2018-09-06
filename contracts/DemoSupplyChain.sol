@@ -5,15 +5,12 @@ contract DemoSupplyChain {
   //Dueño del contrato
   address owner;
 
-  //Contador del mediciones
-  uint readingCounter;
-
   //Estado del sensor
   enum deviceState { Active, Inactive, Deleted }
 
   //Estructura de datos para una medición
   struct Reading {
-    uint readingId;
+    uint blockNumber;
     address sender;
     uint timestamp;
     uint temperature;
@@ -80,14 +77,11 @@ contract DemoSupplyChain {
   function addReading(uint8 _deviceId, uint _timestamp, uint _temperature)
   public {
 
-    //Incrementar el contador
-    readingCounter++;
-
     //Si el dispositivo existe
     if (devices[_deviceId].exists) {
 
       //Agregar nueva medición
-      devices[_deviceId].readings.push(Reading(readingCounter, msg.sender, _timestamp, _temperature));
+      devices[_deviceId].readings.push(Reading(block.number, msg.sender, _timestamp, _temperature));
 
     } else {
       revert("El id de dispositivo indicado no existe");
@@ -149,19 +143,19 @@ contract DemoSupplyChain {
     }
     
     //Declarar arrays
-    uint[] memory readingId = new uint[](fromIndex - toIndex + 1);
+    uint[] memory blockNumber = new uint[](fromIndex - toIndex + 1);
     address[] memory sender = new address[](fromIndex - toIndex + 1);
     uint[] memory timestamp = new uint[](fromIndex - toIndex + 1);
     uint[] memory temperature = new uint[](fromIndex - toIndex + 1);
     
     //Obtener claves
-    (readingId, sender) = getKeysByDeviceId(_deviceId, _readingNumber);
+    (blockNumber, sender) = getKeysByDeviceId(_deviceId, _readingNumber);
     
     //Obtener Datos
     (timestamp, temperature) = getDataByDeviceId(_deviceId, _readingNumber);
 
     //Devolver valores
-    return (readingId, sender, timestamp, temperature);
+    return (blockNumber, sender, timestamp, temperature);
   }
   
   //Obtener Ids
@@ -182,18 +176,18 @@ contract DemoSupplyChain {
       toIndex = devices[_deviceId].readings.length - _readingNumber + 1;
     }
 
-    uint[] memory readingId = new uint[](devices[_deviceId].readings.length - toIndex + 1);
+    uint[] memory blockNumber = new uint[](devices[_deviceId].readings.length - toIndex + 1);
     address[] memory sender = new address[](devices[_deviceId].readings.length - toIndex + 1);
     uint index = 0;
 
     for(uint i = fromIndex; i >= toIndex; i--){
-      readingId[index] = devices[_deviceId].readings[i-1].readingId;
+      blockNumber[index] = devices[_deviceId].readings[i-1].blockNumber;
       sender[index] = devices[_deviceId].readings[i-1].sender;
       index++;
     }
 
     //Devolver valores
-    return (readingId, sender);
+    return (blockNumber, sender);
   }
 
   //Obtener Datos

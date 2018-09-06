@@ -98,14 +98,16 @@ class Content extends Component {
 
     //Recorrer las lecturas obtenidos del dispositivo
     for (let i = 0; i < readings[0].length; i++) {
-      const readingId = readings[0][i].toString();
+      id++;
+      const blockNumber = readings[0][i].toString();
       const sender = readings[1][i].toString();
       const fechahora = new Date(Number(readings[2][i].toString()));
       const fecha = fechahora.getDate() + '/' + (fechahora.getMonth() + 1) + '/' + fechahora.getFullYear();
       const hora = fechahora.getHours() + ':' + fechahora.getMinutes();
       const temperatura = readings[3][i].toString() + '°C';
       let readingItem = {
-        id: readingId,
+        id: id,
+        blockNumber: blockNumber,
         sender: sender,
         fecha: fecha,
         hora: hora,
