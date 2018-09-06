@@ -5,11 +5,15 @@ contract DemoSupplyChain {
   //Dueño del contrato
   address owner;
 
+  //Contador del mediciones
+  uint readingCounter;
+
   //Estado del sensor
   enum deviceState { Active, Inactive, Deleted }
 
   //Estructura de datos para una medición
   struct Reading {
+    uint readingId;
     address sender;
     uint timestamp;
     uint temperature;
@@ -75,11 +79,15 @@ contract DemoSupplyChain {
   //Función para agregar una nueva medición
   function addReading(uint8 _deviceId, uint _timestamp, uint _temperature)
   public {
+
+    //Incrementar el contador
+    readingCounter++;
+
     //Si el dispositivo existe
     if (devices[_deviceId].exists) {
 
       //Agregar nueva medición
-      devices[_deviceId].readings.push(Reading(msg.sender, _timestamp, _temperature));
+      devices[_deviceId].readings.push(Reading(readingCounter, msg.sender, _timestamp, _temperature));
 
     } else {
       revert("El id de dispositivo indicado no existe");
@@ -119,19 +127,54 @@ contract DemoSupplyChain {
     return (deviceId, description, state);
   }
 
-  //Obtener las últimas N mediciones de un dispositivo
+    //Obtener las últimas N mediciones de un dispositivo
   function getLastNReadingsByDeviceId(uint8 _deviceId, uint8 _readingNumber)
   constant
   public
-  returns(address[], uint[], uint[])
+  returns(uint[], address[], uint[], uint[])
   {
     if (!devices[_deviceId].exists) {
       revert("El dispositivo indicado no existe");
     }
+    
+    //Obtener índice desde, hasta y tamaño del array
+    uint fromIndex = devices[_deviceId].readings.length;
+    uint toIndex = 0;
+    
+    //Si tiene menos lecturas de las que se piden
+    if (devices[_deviceId].readings.length < _readingNumber) {
+      toIndex = 1;
+    } else {
+      toIndex = devices[_deviceId].readings.length - _readingNumber + 1;
+    }
+    
+    //Declarar arrays
+    uint[] memory readingId = new uint[](fromIndex - toIndex + 1);
+    address[] memory sender = new address[](fromIndex - toIndex + 1);
+    uint[] memory timestamp = new uint[](fromIndex - toIndex + 1);
+    uint[] memory temperature = new uint[](fromIndex - toIndex + 1);
+    
+    //Obtener claves
+    (readingId, sender) = getKeysByDeviceId(_deviceId, _readingNumber);
+    
+    //Obtener Datos
+    (timestamp, temperature) = getDataByDeviceId(_deviceId, _readingNumber);
+
+    //Devolver valores
+    return (readingId, sender, timestamp, temperature);
+  }
+  
+  //Obtener Ids
+  function getKeysByDeviceId(uint8 _deviceId, uint8 _readingNumber)
+  constant
+  private
+  returns(uint[], address[])
+  {
 
     //Obtener índice desde, hasta y tamaño del array
     uint fromIndex = devices[_deviceId].readings.length;
     uint toIndex = 0;
+    
     //Si tiene menos lecturas de las que se piden
     if (devices[_deviceId].readings.length < _readingNumber) {
       toIndex = 1;
@@ -139,20 +182,51 @@ contract DemoSupplyChain {
       toIndex = devices[_deviceId].readings.length - _readingNumber + 1;
     }
 
-    address[] memory sender = new address[](fromIndex - toIndex + 1);
-    uint[] memory timestamp = new uint[](fromIndex - toIndex + 1);
-    uint[] memory temperature = new uint[](fromIndex - toIndex + 1);
+    uint[] memory readingId = new uint[](devices[_deviceId].readings.length - toIndex + 1);
+    address[] memory sender = new address[](devices[_deviceId].readings.length - toIndex + 1);
     uint index = 0;
 
     for(uint i = fromIndex; i >= toIndex; i--){
+      readingId[index] = devices[_deviceId].readings[i-1].readingId;
       sender[index] = devices[_deviceId].readings[i-1].sender;
+      index++;
+    }
+
+    //Devolver valores
+    return (readingId, sender);
+  }
+
+  //Obtener Datos
+  function getDataByDeviceId(uint8 _deviceId, uint8 _readingNumber)
+  constant
+  private
+  returns(uint[], uint[])
+  {
+
+    //Obtener índice desde, hasta y tamaño del array
+    uint fromIndex = devices[_deviceId].readings.length;
+    uint toIndex = 0;
+    
+    //Si tiene menos lecturas de las que se piden
+    if (devices[_deviceId].readings.length < _readingNumber) {
+      toIndex = 1;
+    } else {
+      toIndex = devices[_deviceId].readings.length - _readingNumber + 1;
+    }
+
+    uint[] memory timestamp = new uint[](devices[_deviceId].readings.length - toIndex + 1);
+    uint[] memory temperature = new uint[](devices[_deviceId].readings.length - toIndex + 1);
+    uint index = 0;
+
+    for(uint i = fromIndex; i >= toIndex; i--){
       timestamp[index] = devices[_deviceId].readings[i-1].timestamp;
       temperature[index] = devices[_deviceId].readings[i-1].temperature;
       index++;
     }
 
     //Devolver valores
-    return (sender, timestamp, temperature);
+    return (timestamp, temperature);
   }
 
 }
+
